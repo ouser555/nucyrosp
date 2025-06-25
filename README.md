@@ -1,2 +1,2 @@
 # nucyrosp
-nucyrosp
+make nucyrosp:via
