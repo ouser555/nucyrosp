@@ -1,17 +1,17 @@
-# jmouse
-    make nujmouse:via
+# nucyrosp
+    make nucyrosp:via
 ```
 Flashing example for this keyboard:
 
-    make numouse:via:flash
+    make nucyrosp:via:flash
 
 
 - waveshare RP2040 zero
-- adns5050 optical sensor
-- joycon joystick
+- pmw3610 optical sensor
+- elite joystick
 - 0.91"oled
 - scrolling wheel
-- 11 key
+- 32 key
 
 
 ## Bootloader
