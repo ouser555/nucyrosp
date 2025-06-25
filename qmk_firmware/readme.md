@@ -8,7 +8,11 @@ quantum/split_common/transactions.c
 
 參考了幾個zmk firmware repo的寫法，都沒有成功。
 
-剛好就這個get cpi讀取失敗會開始無限重試拖垮整個系統，所以就直接把這段程式屏蔽掉。
+雙手都裝了pmw3610，master切換cpi正常，
+
+slave要切換cpi需要用pointing_device_set_cpi_on_side()，但它寫完後會get_cpi檢查是否寫入成功。
+
+剛好就這個get cpi讀取失敗後會開始無限重試拖垮整個系統，所以就直接把這段程式屏蔽掉。
 
 ```
 #if 0
