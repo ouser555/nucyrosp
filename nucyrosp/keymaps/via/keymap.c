@@ -296,6 +296,36 @@ void showreceiver(void){
 }
 
 
+// 判斷是否為 joystick button 的巨集（依你的定義調整）
+#define IS_JOYSTICK_BUTTON(kc) ((kc) >= QK_JOYSTICK && (kc) <= QK_JOYSTICK_MAX)
+#define IS_BASIC_KEY(kc) ((kc) >= QK_BASIC && (kc) <= QK_BASIC_MAX)
+
+void universal_register_keycode(uint16_t kc) {
+    if (IS_JOYSTICK_BUTTON(kc)) {
+        register_joystick_button(kc - QK_JOYSTICK);
+    } else if (IS_BASIC_KEY(kc)) {
+        register_code16(kc);
+    } else {
+        // 其他複雜 keycode（如 Mod-Tap、Layer-Tap）
+        // 在按下階段通常不需要特殊處理，因為無法模擬完整行為
+        // 可依實際需求擴充
+    }
+}
+
+void universal_unregister_keycode(uint16_t kc) {
+    if (IS_JOYSTICK_BUTTON(kc)) {
+        unregister_joystick_button(kc - QK_JOYSTICK);
+    } else if (IS_BASIC_KEY(kc)) {
+        unregister_code16(kc);
+    } else {
+        // 同上，不支援完整模擬解除，視需求補上
+    }
+}
+
+
+
+
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_BASE] = LAYOUT_vertical_5x6(
   //,-----------------------------------------------------.
@@ -419,13 +449,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_GAMINGL] = LAYOUT_vertical_5x6(
   //,-----------------------------------------------------.
-        JS_0,   JS_1,    GAMING, JS_0,   KC_P8,   KC_UP,
+        JS_0,   JS_1,    GAMING, JS_0,   JS_11,   KC_UP,
   //|--------+--------+--------+--------+--------+--------|
-        KC_TRNS,JS_3,    JS_4,   JS_5,   KC_P4,   KC_LEFT,
+        KC_TRNS,JS_3,    JS_4,   JS_5,   JS_8,   KC_LEFT,
   //|--------+--------+--------+--------+--------+--------|
-        JS_6,   JS_7,    JS_8,   JS_9,   KC_P6,   KC_RIGHT,
+        JS_6,   JS_7,    JS_8,   JS_9,   JS_14,   KC_RIGHT,
   //|--------+--------+--------+--------+--------+--------|
-        JS_10,  JS_11,   JS_12,  JS_13,  KC_P2,   KC_DOWN,
+        JS_10,  JS_11,   JS_12,  JS_13,  JS_12,   KC_DOWN,
   //|--------+--------+--------+--------+--------+--------|
       KC_TRNS,KC_TRNS,   JS_14,  JS_15,  MS_WHLU,MS_WHLD,
   //|--------+--------+--------+--------+--------+--------|
@@ -836,42 +866,42 @@ void matrix_scan_user(void) {
       yPos = analogReadPin(JSV);      
       //yPos = maxisCoordinate(JSV, yOrigin);
       if (!yDownHeld && yPos >= _DOWN_TRESHOLD) {
-        //register_code(KC_H);
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),1,5));
+        //register_code16(KC_H);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),1,5));
         yDownHeld = true;
       } else if (yDownHeld && yPos < _DOWN_TRESHOLD) {
         yDownHeld = false;
-        //unregister_code(KC_H);
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),1,5));
+        //unregister_code16(KC_H);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),1,5));
       } else if (!yUpHeld && yPos <= _UP_TRESHOLD) {
         yUpHeld = true;
-        //register_code(KC_F);
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),2,5));
+        //register_code16(KC_F);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),2,5));
       } else if (yUpHeld && yPos > _UP_TRESHOLD) {
         yUpHeld = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),2,5));
-        //unregister_code(KC_F);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),2,5));
+        //unregister_code16(KC_F);
       }
       //}
       
       xPos = analogReadPin(JSH);
       //xPos = maxisCoordinate(JSH, xOrigin);
       if (!xLeftHeld && xPos >= _DOWN_TRESHOLD) {
-        //register_code(KC_T);
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),3,5));
+        //register_code16(KC_T);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),3,5));
         xLeftHeld = true;
       } else if (xLeftHeld && xPos < _DOWN_TRESHOLD) {
         xLeftHeld = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),3,5));
-        //unregister_code(KC_T);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),3,5));
+        //unregister_code16(KC_T);
       } else if (!xRightHeld && xPos <= _UP_TRESHOLD) {
         xRightHeld = true;
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),0,5));
-        //register_code(KC_G);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),0,5));
+        //register_code16(KC_G);
       } else if (xRightHeld && xPos > _UP_TRESHOLD) {
         xRightHeld = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),0,5));
-        //unregister_code(KC_G);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),0,5));
+        //unregister_code16(KC_G);
       }
 
     //-----------------------WASD mode---------------------------
@@ -881,43 +911,43 @@ void matrix_scan_user(void) {
       yPos = analogReadPin(JSV);      
       //yPos = maxisCoordinate(JSV, yOrigin);
       if (!yDownHeld && yPos >= _DOWN_TRESHOLD) {
-        register_code(KC_A);
+        register_code16(KC_A);
         yDownHeld = true;
       } else if (yDownHeld && yPos < _DOWN_TRESHOLD) {
         yDownHeld = false;
-        unregister_code(KC_A);
+        unregister_code16(KC_A);
       } else if (!yUpHeld && yPos <= _UP_TRESHOLD) {
         yUpHeld = true;
-        register_code(KC_D);
+        register_code16(KC_D);
       } else if (yUpHeld && yPos > _UP_TRESHOLD) {
         yUpHeld = false;
-        unregister_code(KC_D);
+        unregister_code16(KC_D);
       }
       //}
       
       xPos = analogReadPin(JSH);
       //xPos = maxisCoordinate(JSH, xOrigin);
       if (!xLeftHeld && xPos >= _DOWN_TRESHOLD) {
-        register_code(KC_S);
+        register_code16(KC_S);
         xLeftHeld = true;
       } else if (xLeftHeld && xPos < _DOWN_TRESHOLD) {
         xLeftHeld = false;
-        unregister_code(KC_S);
+        unregister_code16(KC_S);
       } else if (!xRightHeld && xPos <= _UP_TRESHOLD) {
         xRightHeld = true;
-        register_code(KC_W);
+        register_code16(KC_W);
       } else if (xRightHeld && xPos > _UP_TRESHOLD) {
         xRightHeld = false;
-        unregister_code(KC_W);
+        unregister_code16(KC_W);
       }
 #if 0
       if (wasdShiftMode) {
         bool yShifted = yPos < _SHIFT;
         if (!shiftHeld && yShifted) {
-          register_code(KC_LSFT);
+          register_code16(KC_LSFT);
           shiftHeld = true;
         } else if (shiftHeld && !yShifted) {
-          unregister_code(KC_LSFT);
+          unregister_code16(KC_LSFT);
           shiftHeld = false;
         }
       }
@@ -962,33 +992,33 @@ void matrix_scan_user(void) {
     }else if(jMode1 == _SCROLL){
       yPos = analogReadPin(JSV);
       if (!yDownHeld && yPos >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_L);
+        register_code16(KC_WH_L);
         yDownHeld = true;
       } else if (yDownHeld && yPos < _DOWN_TRESHOLD) {
         yDownHeld = false;
-        unregister_code(KC_WH_L);
+        unregister_code16(KC_WH_L);
       } else if (!yUpHeld && yPos <= _UP_TRESHOLD) {
         yUpHeld = true;
-        register_code(KC_WH_R);
+        register_code16(KC_WH_R);
       } else if (yUpHeld && yPos > _UP_TRESHOLD) {
         yUpHeld = false;
-        unregister_code(KC_WH_R);
+        unregister_code16(KC_WH_R);
       }
       //}
       
       xPos = analogReadPin(JSH);
       if (!xLeftHeld && xPos >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_D);
+        register_code16(KC_WH_D);
         xLeftHeld = true;
       } else if (xLeftHeld && xPos < _DOWN_TRESHOLD) {
         xLeftHeld = false;
-        unregister_code(KC_WH_D);
+        unregister_code16(KC_WH_D);
       } else if (!xRightHeld && xPos <= _UP_TRESHOLD) {
         xRightHeld = true;
-        register_code(KC_WH_U);
+        register_code16(KC_WH_U);
       } else if (xRightHeld && xPos > _UP_TRESHOLD) {
         xRightHeld = false;
-        unregister_code(KC_WH_U);
+        unregister_code16(KC_WH_U);
       }
     //-----------------------gaming mode---------------------------
     }else if(jMode1 == _GAMING){
@@ -1017,42 +1047,48 @@ void matrix_scan_user(void) {
       yPos2 = analogReadPin(JSV2);      
       //yPos = maxisCoordinate(JSV, yOrigin);
       if (!yDownHeld2 && yPos2 >= _DOWN_TRESHOLD) {
-        //register_code(KC_H);
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+        //register_code16(KC_H);
+        //universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+        //register_joystick_button(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+
+
         yDownHeld2 = true;
       } else if (yDownHeld2 && yPos2 < _DOWN_TRESHOLD) {
         yDownHeld2 = false;
-        //unregister_code(KC_H);
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+        //unregister_code16(KC_H);
+        //universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+        //unregister_joystick_button(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),2,4));
       } else if (!yUpHeld2 && yPos2 <= _UP_TRESHOLD) {
         yUpHeld2 = true;
-        //register_code(KC_F);
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),1,4));
+        //register_code16(KC_F);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),1,4));
       } else if (yUpHeld2 && yPos2 > _UP_TRESHOLD) {
         yUpHeld2 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),1,4));
-        //unregister_code(KC_F);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),1,4));
+        //unregister_code16(KC_F);
       }
       //}
       
       xPos2 = analogReadPin(JSH2);
       //xPos = maxisCoordinate(JSH, xOrigin);
       if (!xLeftHeld2 && xPos2 >= _DOWN_TRESHOLD) {
-        //register_code(KC_T);
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),0,4));
+        //register_code16(KC_T);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),0,4));
         xLeftHeld2 = true;
       } else if (xLeftHeld2 && xPos2 < _DOWN_TRESHOLD) {
         xLeftHeld2 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),0,4));
-        //unregister_code(KC_T);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),0,4));
+        //unregister_code16(KC_T);
       } else if (!xRightHeld2 && xPos2 <= _UP_TRESHOLD) {
         xRightHeld2 = true;
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),3,4));
-        //register_code(KC_G);
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),3,4));
+        //register_code16(KC_G);
       } else if (xRightHeld2 && xPos2 > _UP_TRESHOLD) {
         xRightHeld2 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),3,4));
-        //unregister_code(KC_G);
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),3,4));
+        //unregister_code16(KC_G);
       }
     //-----------------------WASD mode---------------------------
     }else if(jMode2 == _WASD) {
@@ -1061,43 +1097,43 @@ void matrix_scan_user(void) {
       yPos2 = analogReadPin(JSV2);      
       //yPos = maxisCoordinate(JSV, yOrigin);
       if (!yDownHeld2 && yPos2 >= _DOWN_TRESHOLD) {
-        register_code(KC_D);
+        register_code16(KC_D);
         yDownHeld2 = true;
       } else if (yDownHeld2 && yPos2 < _DOWN_TRESHOLD) {
         yDownHeld2 = false;
-        unregister_code(KC_D);
+        unregister_code16(KC_D);
       } else if (!yUpHeld2 && yPos2 <= _UP_TRESHOLD) {
         yUpHeld2 = true;
-        register_code(KC_A);
+        register_code16(KC_A);
       } else if (yUpHeld2 && yPos2 > _UP_TRESHOLD) {
         yUpHeld2 = false;
-        unregister_code(KC_A);
+        unregister_code16(KC_A);
       }
       //}
       
       xPos2 = analogReadPin(JSH2);
       //xPos = maxisCoordinate(JSH, xOrigin);
       if (!xLeftHeld2 && xPos2 >= _DOWN_TRESHOLD) {
-        register_code(KC_W);
+        register_code16(KC_W);
         xLeftHeld2 = true;
       } else if (xLeftHeld2 && xPos2 < _DOWN_TRESHOLD) {
         xLeftHeld2 = false;
-        unregister_code(KC_W);
+        unregister_code16(KC_W);
       } else if (!xRightHeld2 && xPos2 <= _UP_TRESHOLD) {
         xRightHeld2 = true;
-        register_code(KC_S);
+        register_code16(KC_S);
       } else if (xRightHeld2 && xPos2 > _UP_TRESHOLD) {
         xRightHeld2 = false;
-        unregister_code(KC_S);
+        unregister_code16(KC_S);
       }
 #if 0
       if (wasdShiftMode) {
         bool yShifted = yPos < _SHIFT;
         if (!shiftHeld && yShifted) {
-          register_code(KC_LSFT);
+          register_code16(KC_LSFT);
           shiftHeld = true;
         } else if (shiftHeld && !yShifted) {
-          unregister_code(KC_LSFT);
+          unregister_code16(KC_LSFT);
           shiftHeld = false;
         }
       }
@@ -1127,33 +1163,33 @@ void matrix_scan_user(void) {
     }else if(jMode2 == _SCROLL){
       yPos2 = analogReadPin(JSV2);
       if (!yDownHeld2 && yPos2 >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_R);
+        register_code16(KC_WH_R);
         yDownHeld2 = true;
       } else if (yDownHeld2 && yPos2 < _DOWN_TRESHOLD) {
         yDownHeld2 = false;
-        unregister_code(KC_WH_R);
+        unregister_code16(KC_WH_R);
       } else if (!yUpHeld2 && yPos2 <= _UP_TRESHOLD) {
         yUpHeld2 = true;
-        register_code(KC_WH_L);
+        register_code16(KC_WH_L);
       } else if (yUpHeld2 && yPos2 > _UP_TRESHOLD) {
         yUpHeld2 = false;
-        unregister_code(KC_WH_L);
+        unregister_code16(KC_WH_L);
       }
       //}
       
       xPos2 = analogReadPin(JSH2);
       if (!xLeftHeld2 && xPos2 >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_U);
+        register_code16(KC_WH_U);
         xLeftHeld2 = true;
       } else if (xLeftHeld2 && xPos2 < _DOWN_TRESHOLD) {
         xLeftHeld2 = false;
-        unregister_code(KC_WH_U);
+        unregister_code16(KC_WH_U);
       } else if (!xRightHeld2 && xPos2 <= _UP_TRESHOLD) {
         xRightHeld2 = true;
-        register_code(KC_WH_D);
+        register_code16(KC_WH_D);
       } else if (xRightHeld2 && xPos2 > _UP_TRESHOLD) {
         xRightHeld2 = false;
-        unregister_code(KC_WH_D);
+        unregister_code16(KC_WH_D);
       }
     }
 #endif     /*------jmod2 end---------*/
@@ -1169,19 +1205,19 @@ void matrix_scan_user(void) {
 
       if (!yDownHeld3 && yPos3 >= _DOWN_TRESHOLD) {
 
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),6,5));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),6,5));
         yDownHeld3 = true;
       } else if (yDownHeld3 && yPos3 < _DOWN_TRESHOLD) {
         yDownHeld3 = false;
 
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),6,5));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),6,5));
       } else if (!yUpHeld3 && yPos3 <= _UP_TRESHOLD) {
         yUpHeld3 = true;
 
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),7,5));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),7,5));
       } else if (yUpHeld3 && yPos3 > _UP_TRESHOLD) {
         yUpHeld3 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),7,5));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),7,5));
       }
 
       
@@ -1190,19 +1226,19 @@ void matrix_scan_user(void) {
 
       if (!xLeftHeld3 && xPos3 >= _DOWN_TRESHOLD) {
 
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),8,5));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),8,5));
         xLeftHeld3 = true;
       } else if (xLeftHeld3 && xPos3 < _DOWN_TRESHOLD) {
         xLeftHeld3 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),8,5));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),8,5));
 
       } else if (!xRightHeld3 && xPos3 <= _UP_TRESHOLD) {
         xRightHeld3 = true;
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),5,5));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),5,5));
 
       } else if (xRightHeld3 && xPos3 > _UP_TRESHOLD) {
         xRightHeld3 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),5,5));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),5,5));
       }
 
     //-----------------------WASD mode---------------------------
@@ -1212,17 +1248,17 @@ void matrix_scan_user(void) {
       yPos3 = s2m.jx1;
 
       if (!yDownHeld3 && yPos3 >= _DOWN_TRESHOLD) {
-        register_code(KC_A);
+        register_code16(KC_A);
         yDownHeld3 = true;
       } else if (yDownHeld3 && yPos3 < _DOWN_TRESHOLD) {
         yDownHeld3 = false;
-        unregister_code(KC_A);
+        unregister_code16(KC_A);
       } else if (!yUpHeld3 && yPos3 <= _UP_TRESHOLD) {
         yUpHeld3 = true;
-        register_code(KC_D);
+        register_code16(KC_D);
       } else if (yUpHeld3 && yPos3 > _UP_TRESHOLD) {
         yUpHeld3 = false;
-        unregister_code(KC_D);
+        unregister_code16(KC_D);
       }
 
       
@@ -1230,17 +1266,17 @@ void matrix_scan_user(void) {
       xPos3 = s2m.jy1;
 
       if (!xLeftHeld3 && xPos3 >= _DOWN_TRESHOLD) {
-        register_code(KC_S);
+        register_code16(KC_S);
         xLeftHeld3 = true;
       } else if (xLeftHeld3 && xPos3 < _DOWN_TRESHOLD) {
         xLeftHeld3 = false;
-        unregister_code(KC_S);
+        unregister_code16(KC_S);
       } else if (!xRightHeld3 && xPos3 <= _UP_TRESHOLD) {
         xRightHeld3 = true;
-        register_code(KC_W);
+        register_code16(KC_W);
       } else if (xRightHeld3 && xPos3 > _UP_TRESHOLD) {
         xRightHeld3 = false;
-        unregister_code(KC_W);
+        unregister_code16(KC_W);
       }
 
     //---------------------joystick mode----------------------------
@@ -1279,33 +1315,33 @@ void matrix_scan_user(void) {
       //yPos = analogReadPin(JSV);
       yPos3 = s2m.jx1;
       if (!yDownHeld3 && yPos3 >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_L);
+        register_code16(KC_WH_L);
         yDownHeld3 = true;
       } else if (yDownHeld3 && yPos3 < _DOWN_TRESHOLD) {
         yDownHeld3 = false;
-        unregister_code(KC_WH_L);
+        unregister_code16(KC_WH_L);
       } else if (!yUpHeld3 && yPos3 <= _UP_TRESHOLD) {
         yUpHeld3 = true;
-        register_code(KC_WH_R);
+        register_code16(KC_WH_R);
       } else if (yUpHeld3 && yPos3 > _UP_TRESHOLD) {
         yUpHeld3 = false;
-        unregister_code(KC_WH_R);
+        unregister_code16(KC_WH_R);
       }
       
       //xPos = analogReadPin(JSH);
       xPos3 = s2m.jy1;
       if (!xLeftHeld3 && xPos3 >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_D);
+        register_code16(KC_WH_D);
         xLeftHeld3 = true;
       } else if (xLeftHeld3 && xPos3 < _DOWN_TRESHOLD) {
         xLeftHeld3 = false;
-        unregister_code(KC_WH_D);
+        unregister_code16(KC_WH_D);
       } else if (!xRightHeld3 && xPos3 <= _UP_TRESHOLD) {
         xRightHeld3 = true;
-        register_code(KC_WH_U);
+        register_code16(KC_WH_U);
       } else if (xRightHeld3 && xPos3 > _UP_TRESHOLD) {
         xRightHeld3 = false;
-        unregister_code(KC_WH_U);
+        unregister_code16(KC_WH_U);
       }
     }
 
@@ -1319,19 +1355,19 @@ void matrix_scan_user(void) {
 
       if (!yDownHeld4 && yPos4 >= _DOWN_TRESHOLD) {
 
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),7,4));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),7,4));
         yDownHeld4 = true;
       } else if (yDownHeld4 && yPos4 < _DOWN_TRESHOLD) {
         yDownHeld4 = false;
 
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),7,4));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),7,4));
       } else if (!yUpHeld4 && yPos4 <= _UP_TRESHOLD) {
         yUpHeld4 = true;
 
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),6,4));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),6,4));
       } else if (yUpHeld4 && yPos4 > _UP_TRESHOLD) {
         yUpHeld4 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),6,4));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),6,4));
       }
 
       
@@ -1340,19 +1376,19 @@ void matrix_scan_user(void) {
 
       if (!xLeftHeld4 && xPos4 >= _DOWN_TRESHOLD) {
 
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),5,4));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),5,4));
         xLeftHeld4 = true;
       } else if (xLeftHeld4 && xPos4 < _DOWN_TRESHOLD) {
         xLeftHeld4 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),5,4));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),5,4));
 
       } else if (!xRightHeld4 && xPos4 <= _UP_TRESHOLD) {
         xRightHeld4 = true;
-        register_code(dynamic_keymap_get_keycode(biton32(layer_state),8,4));
+        universal_register_keycode(dynamic_keymap_get_keycode(biton32(layer_state),8,4));
 
       } else if (xRightHeld4 && xPos4 > _UP_TRESHOLD) {
         xRightHeld4 = false;
-        unregister_code(dynamic_keymap_get_keycode(biton32(layer_state),8,4));
+        universal_unregister_keycode(dynamic_keymap_get_keycode(biton32(layer_state),8,4));
       }
 
     //-----------------------WASD mode---------------------------
@@ -1362,17 +1398,17 @@ void matrix_scan_user(void) {
       yPos4 = s2m.jx2;
 
       if (!yDownHeld4 && yPos4 >= _DOWN_TRESHOLD) {
-        register_code(KC_D);
+        register_code16(KC_D);
         yDownHeld4 = true;
       } else if (yDownHeld4 && yPos4 < _DOWN_TRESHOLD) {
         yDownHeld4 = false;
-        unregister_code(KC_D);
+        unregister_code16(KC_D);
       } else if (!yUpHeld4 && yPos4 <= _UP_TRESHOLD) {
         yUpHeld4 = true;
-        register_code(KC_A);
+        register_code16(KC_A);
       } else if (yUpHeld4 && yPos4 > _UP_TRESHOLD) {
         yUpHeld4 = false;
-        unregister_code(KC_A);
+        unregister_code16(KC_A);
       }
 
       
@@ -1380,17 +1416,17 @@ void matrix_scan_user(void) {
       xPos4 = s2m.jy2;
 
       if (!xLeftHeld4 && xPos4 >= _DOWN_TRESHOLD) {
-        register_code(KC_W);
+        register_code16(KC_W);
         xLeftHeld4 = true;
       } else if (xLeftHeld4 && xPos4 < _DOWN_TRESHOLD) {
         xLeftHeld4 = false;
-        unregister_code(KC_W);
+        unregister_code16(KC_W);
       } else if (!xRightHeld4 && xPos4 <= _UP_TRESHOLD) {
         xRightHeld4 = true;
-        register_code(KC_S);
+        register_code16(KC_S);
       } else if (xRightHeld4 && xPos4 > _UP_TRESHOLD) {
         xRightHeld4 = false;
-        unregister_code(KC_S);
+        unregister_code16(KC_S);
       }
 
     //---------------------joystick mode----------------------------
@@ -1429,33 +1465,33 @@ void matrix_scan_user(void) {
       //yPos = analogReadPin(JSV);
       yPos4 = s2m.jx2;
       if (!yDownHeld4 && yPos4 >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_R);
+        register_code16(KC_WH_R);
         yDownHeld4 = true;
       } else if (yDownHeld4 && yPos4 < _DOWN_TRESHOLD) {
         yDownHeld4 = false;
-        unregister_code(KC_WH_R);
+        unregister_code16(KC_WH_R);
       } else if (!yUpHeld4 && yPos4 <= _UP_TRESHOLD) {
         yUpHeld4 = true;
-        register_code(KC_WH_L);
+        register_code16(KC_WH_L);
       } else if (yUpHeld4 && yPos4 > _UP_TRESHOLD) {
         yUpHeld4 = false;
-        unregister_code(KC_WH_L);
+        unregister_code16(KC_WH_L);
       }
       
       //xPos = analogReadPin(JSH);
       xPos4 = s2m.jy2;
       if (!xLeftHeld4 && xPos4 >= _DOWN_TRESHOLD) {
-        register_code(KC_WH_U);
+        register_code16(KC_WH_U);
         xLeftHeld4 = true;
       } else if (xLeftHeld4 && xPos4 < _DOWN_TRESHOLD) {
         xLeftHeld4 = false;
-        unregister_code(KC_WH_U);
+        unregister_code16(KC_WH_U);
       } else if (!xRightHeld4 && xPos4 <= _UP_TRESHOLD) {
         xRightHeld4 = true;
-        register_code(KC_WH_D);
+        register_code16(KC_WH_D);
       } else if (xRightHeld4 && xPos4 > _UP_TRESHOLD) {
         xRightHeld4 = false;
-        unregister_code(KC_WH_D);
+        unregister_code16(KC_WH_D);
       }
     }
 #endif
